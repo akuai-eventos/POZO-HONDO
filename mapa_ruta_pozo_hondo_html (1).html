@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ruta real hacia Pozo Hondo</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Leaflet Routing Machine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+  <style>
+    :root {
+      --azul-noche: #1B2A41;
+      --mostaza: #D4A72C;
+      --terracota: #B85C38;
+      --verde-salvia: #7A8F6A;
+      --cafe: #5A3A22;
+      --crema: #F7EBD8;
+      --blanco-calido: #FFF9EF;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--crema);
+      color: var(--azul-noche);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 38% 62%;
+    }
+
+    .info {
+      padding: 48px 42px;
+      background: linear-gradient(180deg, var(--azul-noche), #243957);
+      color: var(--blanco-calido);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .label {
+      display: inline-block;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--mostaza);
+      margin-bottom: 14px;
+      font-weight: bold;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 44px;
+      line-height: 1.05;
+      color: var(--blanco-calido);
+    }
+
+    h2 {
+      margin: 22px 0 12px;
+      font-size: 22px;
+      color: var(--mostaza);
+    }
+
+    p {
+      font-family: Arial, sans-serif;
+      line-height: 1.65;
+      font-size: 16px;
+      margin: 0 0 18px;
+    }
+
+    .route-box {
+      background: rgba(255, 249, 239, 0.09);
+      border: 1px solid rgba(255, 249, 239, 0.2);
+      border-radius: 24px;
+      padding: 22px;
+      margin-top: 22px;
+    }
+
+    .route-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .route-list li {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 16px;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--mostaza);
+      color: var(--azul-noche);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .note {
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      color: #EFDFAF;
+      line-height: 1.5;
+      border-top: 1px solid rgba(255, 249, 239, 0.22);
+      padding-top: 18px;
+    }
+
+    .map-area {
+      position: relative;
+      background: var(--blanco-calido);
+      padding: 30px;
+    }
+
+    #map {
+      width: 100%;
+      height: calc(100vh - 60px);
+      min-height: 720px;
+      border-radius: 34px;
+      box-shadow: 0 20px 50px rgba(27, 42, 65, 0.22);
+      border: 8px solid var(--blanco-calido);
+    }
+
+    .floating-title {
+      position: absolute;
+      z-index: 999;
+      top: 54px;
+      left: 58px;
+      background: rgba(255, 249, 239, 0.94);
+      border-radius: 22px;
+      padding: 16px 20px;
+      box-shadow: 0 10px 25px rgba(27, 42, 65, 0.16);
+      max-width: 390px;
+      border-left: 8px solid var(--mostaza);
+    }
+
+    .floating-title strong {
+      display: block;
+      font-size: 18px;
+      color: var(--azul-noche);
+      margin-bottom: 5px;
+    }
+
+    .floating-title span {
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      color: var(--cafe);
+    }
+
+    .legend {
+      position: absolute;
+      z-index: 999;
+      bottom: 54px;
+      right: 58px;
+      background: rgba(255, 249, 239, 0.94);
+      padding: 14px 16px;
+      border-radius: 18px;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      box-shadow: 0 10px 25px rgba(27, 42, 65, 0.16);
+      color: var(--azul-noche);
+    }
+
+    .legend div {
+      margin: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--terracota);
+      display: inline-block;
+    }
+
+    .line {
+      width: 28px;
+      height: 4px;
+      border-radius: 20px;
+      background: var(--terracota);
+      display: inline-block;
+    }
+
+    .leaflet-routing-container {
+      display: none;
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 16px;
+      font-family: Arial, sans-serif;
+    }
+
+    .leaflet-popup-content strong {
+      color: var(--azul-noche);
+    }
+
+    @media print {
+      .page {
+        width: 210mm;
+        height: 297mm;
+        min-height: auto;
+        grid-template-columns: 40% 60%;
+      }
+
+      #map {
+        height: 275mm;
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .info {
+        padding: 34px 26px;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      .map-area {
+        padding: 18px;
+      }
+
+      #map {
+        height: 620px;
+        min-height: 620px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="info">
+      <div>
+        <span class="label">Mapa de acceso</span>
+        <h1>Ruta real hacia Pozo Hondo</h1>
+        <h2>Entre Atoles y Memorias</h2>
+        <p>
+          La experiencia inicia en la <strong>Plaza Bolívar de Ejido</strong>. Desde allí,
+          el recorrido baja caminando por la <strong>calle Industria</strong>, continúa por la
+          <strong>calle Carabobo</strong> y llega a <strong>Pozo Hondo</strong>, donde comienza la ruta cultural interna.
+        </p>
+
+        <div class="route-box">
+          <ul class="route-list">
+            <li><span class="number">1</span><span><strong>Plaza Bolívar</strong><br />Punto de partida.</span></li>
+            <li><span class="number">2</span><span><strong>Calle Industria</strong><br />Descenso peatonal desde el centro de Ejido.</span></li>
+            <li><span class="number">3</span><span><strong>Calle Carabobo</strong><br />Conexión hacia la entrada de la comunidad.</span></li>
+            <li><span class="number">4</span><span><strong>Pozo Hondo</strong><br />Inicio del recorrido comunitario.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="note">
+        Este HTML usa Leaflet Routing Machine con OSRM para calcular el trayecto por calles. Requiere conexión a internet y depende de que OpenStreetMap tenga correctamente cargadas las vías peatonales de la zona.
+      </div>
+    </section>
+
+    <section class="map-area">
+      <div class="floating-title">
+        <strong>Plaza Bolívar → Pozo Hondo</strong>
+        <span>Ruta peatonal calculada por calles, usando los puntos reales del recorrido.</span>
+      </div>
+      <div id="map"></div>
+      <div class="legend">
+        <div><span class="dot"></span> Puntos de referencia</div>
+        <div><span class="line"></span> Ruta calculada por calles</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet Routing Machine JS -->
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+
+  <script>
+    const puntos = [
+      {
+        nombre: "Plaza Bolívar",
+        descripcion: "Punto de partida de la ruta.",
+        coords: [8.546796, -71.242862]
+      },
+      {
+        nombre: "Calle Industria",
+        descripcion: "Descenso peatonal hacia Pozo Hondo.",
+        coords: [8.544483, -71.242862]
+      },
+      {
+        nombre: "Calle Carabobo",
+        descripcion: "Conexión hacia la entrada de la comunidad.",
+        coords: [8.543413, -71.243661]
+      },
+      {
+        nombre: "Pozo Hondo",
+        descripcion: "Entrada a la comunidad e inicio del recorrido cultural.",
+        coords: [8.540683, -71.243675]
+      }
+    ];
+
+    const map = L.map("map", {
+      scrollWheelZoom: true,
+      zoomControl: true
+    });
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    const customIcon = L.divIcon({
+      className: "custom-marker",
+      html: `<div style="
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #B85C38;
+        border: 4px solid #FFF9EF;
+        box-shadow: 0 4px 12px rgba(27,42,65,.35);
+      "></div>`,
+      iconSize: [30, 30],
+      iconAnchor: [15, 15]
+    });
+
+    puntos.forEach((p, index) => {
+      L.marker(p.coords, { icon: customIcon })
+        .addTo(map)
+        .bindPopup(`
+          <strong>${index + 1}. ${p.nombre}</strong><br>
+          ${p.descripcion}<br>
+          <small>${p.coords[0]}, ${p.coords[1]}</small>
+        `);
+    });
+
+    const waypoints = puntos.map(p => L.latLng(p.coords[0], p.coords[1]));
+
+    const routingControl = L.Routing.control({
+      waypoints: waypoints,
+      routeWhileDragging: false,
+      addWaypoints: false,
+      draggableWaypoints: false,
+      fitSelectedRoutes: true,
+      show: false,
+      collapsible: true,
+      lineOptions: {
+        styles: [
+          {
+            color: "#B85C38",
+            opacity: 0.95,
+            weight: 7
+          },
+          {
+            color: "#FFF9EF",
+            opacity: 0.9,
+            weight: 3,
+            dashArray: "10, 10"
+          }
+        ]
+      },
+      createMarker: function() {
+        return null;
+      },
+      router: L.Routing.osrmv1({
+        serviceUrl: "https://router.project-osrm.org/route/v1",
+        profile: "foot"
+      })
+    }).addTo(map);
+
+    routingControl.on("routesfound", function(e) {
+      const route = e.routes[0];
+      const bounds = L.latLngBounds(route.coordinates);
+      map.fitBounds(bounds, { padding: [80, 80] });
+    });
+
+    routingControl.on("routingerror", function() {
+      const routeCoords = puntos.map(p => p.coords);
+      const fallbackLine = L.polyline(routeCoords, {
+        color: "#B85C38",
+        weight: 6,
+        opacity: 0.9,
+        dashArray: "12, 10"
+      }).addTo(map);
+      map.fitBounds(fallbackLine.getBounds(), { padding: [80, 80] });
+      alert("No se pudo calcular la ruta por calles. Se mostrará una ruta referencial con línea directa entre puntos.");
+    });
+  </script>
+</body>
+</html>
